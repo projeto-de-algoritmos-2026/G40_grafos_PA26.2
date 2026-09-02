@@ -1,4 +1,5 @@
 import math
+from collections import deque
 
 class GrafoPonderado:
 
@@ -30,10 +31,10 @@ class GrafoPonderado:
             self._adjacencias[vertice] = {}
 
     # criei um que cria logo n vertices pra evitar problema
-    def adiciona_n_vertices(self, total: int) -> None:
+    def adicionar_n_vertices(self, total: int) -> None:
         self._validar_vertice(total)
         for i in range(0, total):
-            self._adjacencias[i] = {}
+            self.adicionar_vertice(i)
 
 
     def adicionar_aresta(
@@ -51,7 +52,7 @@ class GrafoPonderado:
             if vertice not in self._adjacencias
         ]
         if inexistentes:
-            nomes = ", ".join(inexistentes)
+            nomes = ", ".join(map(str, inexistentes))
             raise ValueError(f"Vertice(s) inexistente(s): {nomes}.")
 
         # coloca para para mabos os lador porque a pista vai e volta
@@ -81,3 +82,52 @@ class GrafoPonderado:
                 for vizinho, peso in vizinhos.items()
             )
             print(f"{vertice} -> {adjacencias}")
+
+    def busca_em_largura( self, origem: int, destino: int ) -> list[int]:
+        
+        self._validar_vertice(origem)
+        self._validar_vertice(destino)
+
+        # verifica se eles existem dentro do grafo
+        inexistentes = [
+            vertice
+            for vertice in (origem, destino)
+            if vertice not in self._adjacencias
+        ]
+        if inexistentes:
+            nomes = ", ".join(map(str, inexistentes))
+            raise ValueError(f"Vertice(s) inexistente(s): {nomes}.")
+
+        # se comeca e termina no mesmo lugar o caminho ja esta pronto
+        if origem == destino:
+            return [origem]
+
+        # a fila guarda os proximos e visitados evita passar duas vezes
+        fila = deque([origem])
+        visitados = {origem}
+        antecessores: dict[int, int] = {}
+
+        while fila:
+            atual = fila.popleft()
+
+            # passa pelos vizinhos
+            for vizinho in self._adjacencias[atual]:
+                if vizinho in visitados:
+                    continue
+
+                visitados.add(vizinho)
+                # guarda de onde veio para montar o caminho depois
+                antecessores[vizinho] = atual
+
+                if vizinho == destino:
+                    # volta pelos antecessores ate chegar na origem
+                    caminho = [destino]
+                    while caminho[-1] != origem:
+                        caminho.append(antecessores[caminho[-1]])
+                    caminho.reverse()
+                    return caminho
+
+                fila.append(vizinho)
+
+        # se a fila acabar nao existe caminho ate o destino
+        return [] # e fim
