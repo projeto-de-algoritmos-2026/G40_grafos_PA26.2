@@ -1,4 +1,5 @@
 import math
+from heap import heap_inserir, heap_remover
 from collections import deque
 
 class GrafoPonderado:
@@ -131,3 +132,53 @@ class GrafoPonderado:
 
         # se a fila acabar nao existe caminho ate o destino
         return [] # e fim
+
+
+    def dijkstra(self, origem, destino):
+
+            self._validar_vertice(origem)
+            self._validar_vertice(destino)
+
+            if origem == destino:
+                return ([origem], 0)
+
+            distancias = {}
+            antecessores = {}
+            heap = []
+
+            distancias[origem] = 0
+
+            heap_inserir(heap, (0, origem))
+
+            while heap:
+                distancia_atual, vertice_atual = heap_remover(heap)
+
+                if distancia_atual > distancias.get(vertice_atual, math.inf):
+                    continue
+
+                if vertice_atual == destino: 
+                    break
+
+                vizinhos = self.obter_vizinhos(vertice_atual)
+
+                for vizinho, peso in vizinhos.items():
+                    nova_distancia = distancia_atual + peso
+
+                    if nova_distancia < distancias.get(vizinho, math.inf):
+                        distancias[vizinho] = nova_distancia
+                        antecessores[vizinho] = vertice_atual
+                        heap_inserir(heap, (nova_distancia, vizinho))
+
+
+            if destino not in distancias:
+                return ([], math.inf)
+
+            caminho = [destino]
+            atual = destino 
+
+            while atual != origem:
+                atual = antecessores[atual]
+                caminho.append(atual)
+
+            caminho.reverse()
+            return caminho, distancias[destino]
