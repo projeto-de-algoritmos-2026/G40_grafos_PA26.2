@@ -3,7 +3,7 @@
 Número da Lista: 40<br>
 Conteúdo da Disciplina: Grafos<br>
 
-##Alunos
+## Alunos
 
 | Matrícula | Aluno                        |
 | --------- | ---------------------------- |
@@ -39,24 +39,24 @@ Conteúdo da Disciplina: Grafos<br>
 </table>
 </center>
 
-##Sobre
+## Sobre
 
 Este repositório apresenta a implementação de um jogo visual desenvolvido para comparar as estratégias de busca dos algoritmos BFS e o Dijkstra. Em grafos não ponderados, ou com todas as arestas de mesmo peso, a BFS encontra o caminho com a menor quantidade de arestas, mas quando o mapa possui diferentes pesos, esse caminho nem sempre apresenta o menor custo total. No jogo, o usuário poderá escolher o tipo de mapa e visualizar o percurso realizado por cada algoritmo em tempo real, observando qual robô chega primeiro ou se ocorre um empate.
 
-##Screenshots
+## Screenshots
 
 Adicione 3 ou mais screenshots do projeto em funcionamento.
 
-##Instalação
+## Instalação
 
 Linguagem: Python 3.12.3<br>
 Framework: (caso exista)<br>
 Descreva os pré-requisitos para rodar o seu projeto e os comandos necessários.
 
-##Uso
+## Uso
 
 Explique como usar seu projeto caso haja algum passo a passo após o comando de execução.
 
-##Outros
+## Outros
 
 Quaisquer outras informações sobre seu projeto podem ser descritas abaixo.
