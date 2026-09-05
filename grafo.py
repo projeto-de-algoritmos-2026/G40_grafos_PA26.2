@@ -1,5 +1,6 @@
 import math
 from collections import deque
+from collections.abc import Callable
 
 class GrafoPonderado:
 
@@ -83,7 +84,12 @@ class GrafoPonderado:
             )
             print(f"{vertice} -> {adjacencias}")
 
-    def busca_em_largura( self, origem: int, destino: int ) -> list[int]:
+    def busca_em_largura(
+        self,
+        origem: int,
+        destino: int,
+        ao_descobrir: Callable[[int], None] | None = None,
+    ) -> list[int]:
         
         self._validar_vertice(origem)
         self._validar_vertice(destino)
@@ -100,12 +106,16 @@ class GrafoPonderado:
 
         # se comeca e termina no mesmo lugar o caminho ja esta pronto
         if origem == destino:
+            if ao_descobrir is not None:
+                ao_descobrir(origem)
             return [origem]
 
         # a fila guarda os proximos e visitados evita passar duas vezes
         fila = deque([origem])
         visitados = {origem}
         antecessores: dict[int, int] = {}
+        if ao_descobrir is not None:
+            ao_descobrir(origem)
 
         while fila:
             atual = fila.popleft()
@@ -116,6 +126,8 @@ class GrafoPonderado:
                     continue
 
                 visitados.add(vizinho)
+                if ao_descobrir is not None:
+                    ao_descobrir(vizinho)
                 # guarda de onde veio para montar o caminho depois
                 antecessores[vizinho] = atual
 
