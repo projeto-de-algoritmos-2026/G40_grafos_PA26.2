@@ -89,16 +89,18 @@ class TelaSelecaoMapa(TelaBase):
             "Cada cenário tem ruas e terrenos que mudam a estratégia.",
             voltar,
         )
-        cards = tk.Frame(self, bg=CORES["fundo"], padx=38, pady=24)
+        cards = tk.Frame(self, bg=CORES["fundo"], padx=24, pady=10)
         cards.pack(fill="both", expand=True)
-        for coluna, mapa in enumerate(MAPAS):
+        total_colunas = 3
+        for indice, mapa in enumerate(MAPAS):
+            linha, coluna = divmod(indice, total_colunas)
             card = CardMapa(cards, mapa, lambda item=mapa: selecionar(item))
-            card.grid(row=0, column=coluna, padx=9, sticky="nsew")
+            card.grid(row=linha, column=coluna, padx=6, pady=6, sticky="nsew")
             cards.columnconfigure(coluna, weight=1, uniform="mapas")
-        cards.rowconfigure(0, weight=1)
+            cards.rowconfigure(linha, weight=1, uniform="mapas")
 
     def _cabecalho(self, titulo: str, subtitulo: str, voltar: Callable[[], None]) -> None:
-        cabecalho = tk.Frame(self, bg=CORES["fundo"], padx=38, pady=26)
+        cabecalho = tk.Frame(self, bg=CORES["fundo"], padx=30, pady=18)
         cabecalho.pack(fill="x")
         Botao(cabecalho, "← Voltar", voltar).pack(side="left")
         textos = tk.Frame(cabecalho, bg=CORES["fundo"])

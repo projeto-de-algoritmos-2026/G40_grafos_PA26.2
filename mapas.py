@@ -85,6 +85,7 @@ class Mapa:
     inicio: int
     destino: int
     ponderado: bool
+    dificuldade: int = 1
     disponivel: bool = True
 
     def criar_grafo(self) -> GrafoPonderado:
@@ -141,6 +142,68 @@ def _locais() -> tuple[VerticeVisual, ...]:
     )
 
 
+def _locais_parque() -> tuple[VerticeVisual, ...]:
+    return (
+        VerticeVisual(1, "Casa do Jogador", TipoLocal.CASA, 0.06, 0.50),
+        VerticeVisual(2, "Mercado das Flores", TipoLocal.MERCADO, 0.28, 0.14),
+        VerticeVisual(3, "Praça das Fontes", TipoLocal.PRACA, 0.28, 0.50),
+        VerticeVisual(4, "Escola do Parque", TipoLocal.ESCOLA, 0.28, 0.86),
+        VerticeVisual(5, "Delegacia Norte", TipoLocal.DELEGACIA, 0.55, 0.14),
+        VerticeVisual(6, "Estação Parque", TipoLocal.ESTACAO, 0.55, 0.50),
+        VerticeVisual(7, "Restaurante do Lago", TipoLocal.RESTAURANTE, 0.55, 0.86),
+        VerticeVisual(8, "Universidade Verde", TipoLocal.UNIVERSIDADE, 0.79, 0.22),
+        VerticeVisual(9, "Hospital do Parque", TipoLocal.HOSPITAL, 0.94, 0.52),
+    )
+
+
+def _locais_pontes() -> tuple[VerticeVisual, ...]:
+    return (
+        VerticeVisual(1, "Casa da Colina", TipoLocal.CASA, 0.05, 0.50),
+        VerticeVisual(2, "Mercado da Ponte", TipoLocal.MERCADO, 0.23, 0.13),
+        VerticeVisual(3, "Praça do Rio", TipoLocal.PRACA, 0.23, 0.50),
+        VerticeVisual(4, "Escola das Águas", TipoLocal.ESCOLA, 0.23, 0.87),
+        VerticeVisual(5, "Estação Oeste", TipoLocal.ESTACAO, 0.48, 0.13),
+        VerticeVisual(6, "Delegacia Central", TipoLocal.DELEGACIA, 0.48, 0.50),
+        VerticeVisual(7, "Restaurante da Orla", TipoLocal.RESTAURANTE, 0.48, 0.87),
+        VerticeVisual(8, "Universidade das Pontes", TipoLocal.UNIVERSIDADE, 0.73, 0.16),
+        VerticeVisual(9, "Estação Leste", TipoLocal.ESTACAO, 0.73, 0.72),
+        VerticeVisual(10, "Hospital das Águas", TipoLocal.HOSPITAL, 0.95, 0.45),
+    )
+
+
+def _locais_obras() -> tuple[VerticeVisual, ...]:
+    return (
+        VerticeVisual(1, "Casa do Jogador", TipoLocal.CASA, 0.04, 0.50),
+        VerticeVisual(2, "Mercado Antigo", TipoLocal.MERCADO, 0.21, 0.12),
+        VerticeVisual(3, "Praça das Obras", TipoLocal.PRACA, 0.21, 0.50),
+        VerticeVisual(4, "Escola Técnica", TipoLocal.ESCOLA, 0.21, 0.88),
+        VerticeVisual(5, "Delegacia Oeste", TipoLocal.DELEGACIA, 0.44, 0.12),
+        VerticeVisual(6, "Estação Central", TipoLocal.ESTACAO, 0.44, 0.50),
+        VerticeVisual(7, "Restaurante Popular", TipoLocal.RESTAURANTE, 0.44, 0.88),
+        VerticeVisual(8, "Universidade Nova", TipoLocal.UNIVERSIDADE, 0.67, 0.12),
+        VerticeVisual(9, "Praça Industrial", TipoLocal.PRACA, 0.67, 0.50),
+        VerticeVisual(10, "Estação Sul", TipoLocal.ESTACAO, 0.67, 0.88),
+        VerticeVisual(11, "Hospital Metropolitano", TipoLocal.HOSPITAL, 0.95, 0.50),
+    )
+
+
+def _locais_labirinto() -> tuple[VerticeVisual, ...]:
+    return (
+        VerticeVisual(1, "Casa do Jogador", TipoLocal.CASA, 0.04, 0.50),
+        VerticeVisual(2, "Mercado Oeste", TipoLocal.MERCADO, 0.21, 0.10),
+        VerticeVisual(3, "Praça do Relógio", TipoLocal.PRACA, 0.21, 0.47),
+        VerticeVisual(4, "Escola Sul", TipoLocal.ESCOLA, 0.21, 0.88),
+        VerticeVisual(5, "Delegacia do Centro", TipoLocal.DELEGACIA, 0.44, 0.10),
+        VerticeVisual(6, "Estação Labirinto", TipoLocal.ESTACAO, 0.44, 0.47),
+        VerticeVisual(7, "Restaurante Sul", TipoLocal.RESTAURANTE, 0.44, 0.88),
+        VerticeVisual(8, "Universidade Norte", TipoLocal.UNIVERSIDADE, 0.67, 0.10),
+        VerticeVisual(9, "Praça das Rotas", TipoLocal.PRACA, 0.67, 0.47),
+        VerticeVisual(10, "Mercado Sul", TipoLocal.MERCADO, 0.67, 0.88),
+        VerticeVisual(11, "Estação Nordeste", TipoLocal.ESTACAO, 0.84, 0.18),
+        VerticeVisual(12, "Hospital do Labirinto", TipoLocal.HOSPITAL, 0.96, 0.52),
+    )
+
+
 # Cenários temporários, isolados da UI e dos algoritmos. No mapa ponderado,
 # BFS tende à rota curta 1-4-8 (custo 20), enquanto Dijkstra encontra a rota
 # 1-2-3-6-8 (custo 6), deixando clara a diferença acadêmica.
@@ -160,6 +223,7 @@ MAPAS: tuple[Mapa, ...] = (
         inicio=1,
         destino=8,
         ponderado=False,
+        dificuldade=1,
     ),
     Mapa(
         identificador="ponderado",
@@ -177,6 +241,94 @@ MAPAS: tuple[Mapa, ...] = (
         inicio=1,
         destino=8,
         ponderado=True,
+        dificuldade=2,
+    ),
+    Mapa(
+        identificador="parque-dos-desvios",
+        nome="Parque dos Desvios",
+        descricao="Rotas cruzadas e um bloqueio escondem o melhor acesso ao hospital.",
+        vertices=_locais_parque(),
+        arestas=(
+            ArestaVisual(1, 3, 1), ArestaVisual(1, 2, 2),
+            ArestaVisual(1, 4, 5), ArestaVisual(2, 3, 1),
+            ArestaVisual(2, 5, 5), ArestaVisual(2, 6, 0),
+            ArestaVisual(3, 4, 2), ArestaVisual(3, 5, 2),
+            ArestaVisual(3, 6, 10), ArestaVisual(4, 7, 1),
+            ArestaVisual(5, 8, 1), ArestaVisual(6, 7, 1),
+            ArestaVisual(6, 8, 2), ArestaVisual(6, 9, 5),
+            ArestaVisual(7, 9, 2), ArestaVisual(8, 9, 1),
+        ),
+        inicio=1,
+        destino=9,
+        ponderado=True,
+        dificuldade=3,
+    ),
+    Mapa(
+        identificador="distrito-das-pontes",
+        nome="Distrito das Pontes",
+        descricao="Ciclos e travessias caras exigem atenção antes de cruzar o distrito.",
+        vertices=_locais_pontes(),
+        arestas=(
+            ArestaVisual(1, 2, 1), ArestaVisual(1, 3, 5),
+            ArestaVisual(1, 4, 2), ArestaVisual(2, 3, 1),
+            ArestaVisual(2, 5, 2), ArestaVisual(3, 4, 1),
+            ArestaVisual(3, 6, 10), ArestaVisual(4, 7, 2),
+            ArestaVisual(5, 6, 1), ArestaVisual(5, 8, 5),
+            ArestaVisual(5, 9, 0), ArestaVisual(6, 8, 2),
+            ArestaVisual(6, 9, 5), ArestaVisual(7, 9, 1),
+            ArestaVisual(7, 10, 10), ArestaVisual(8, 10, 2),
+            ArestaVisual(9, 10, 1),
+        ),
+        inicio=1,
+        destino=10,
+        ponderado=True,
+        dificuldade=4,
+    ),
+    Mapa(
+        identificador="metropole-em-obras",
+        nome="Metrópole em Obras",
+        descricao="Atalhos de lama parecem bons, mas ruas longas podem custar muito menos.",
+        vertices=_locais_obras(),
+        arestas=(
+            ArestaVisual(1, 3, 10), ArestaVisual(3, 6, 10),
+            ArestaVisual(6, 9, 10), ArestaVisual(9, 11, 10),
+            ArestaVisual(1, 2, 1), ArestaVisual(2, 5, 2),
+            ArestaVisual(5, 8, 1), ArestaVisual(8, 9, 2),
+            ArestaVisual(9, 10, 1), ArestaVisual(10, 11, 2),
+            ArestaVisual(1, 4, 5), ArestaVisual(2, 3, 2),
+            ArestaVisual(3, 4, 1), ArestaVisual(3, 5, 0),
+            ArestaVisual(4, 7, 2), ArestaVisual(5, 6, 5),
+            ArestaVisual(6, 7, 1), ArestaVisual(6, 8, 2),
+            ArestaVisual(7, 10, 5), ArestaVisual(8, 11, 10),
+        ),
+        inicio=1,
+        destino=11,
+        ponderado=True,
+        dificuldade=5,
+    ),
+    Mapa(
+        identificador="labirinto-urbano",
+        nome="Labirinto Urbano",
+        descricao="Doze locais, becos, ciclos e obras formam o desafio mais complexo.",
+        vertices=_locais_labirinto(),
+        arestas=(
+            ArestaVisual(1, 2, 1), ArestaVisual(1, 3, 10),
+            ArestaVisual(1, 4, 2), ArestaVisual(2, 3, 5),
+            ArestaVisual(2, 5, 2), ArestaVisual(3, 4, 2),
+            ArestaVisual(3, 5, 0), ArestaVisual(3, 6, 10),
+            ArestaVisual(4, 7, 1), ArestaVisual(5, 6, 5),
+            ArestaVisual(5, 8, 1), ArestaVisual(6, 7, 1),
+            ArestaVisual(6, 8, 2), ArestaVisual(6, 9, 10),
+            ArestaVisual(7, 9, 2), ArestaVisual(7, 10, 2),
+            ArestaVisual(8, 9, 5), ArestaVisual(8, 11, 2),
+            ArestaVisual(9, 10, 1), ArestaVisual(9, 11, 0),
+            ArestaVisual(9, 12, 10), ArestaVisual(10, 12, 5),
+            ArestaVisual(11, 12, 1),
+        ),
+        inicio=1,
+        destino=12,
+        ponderado=True,
+        dificuldade=6,
     ),
 )
 

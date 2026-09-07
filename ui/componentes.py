@@ -54,28 +54,35 @@ class CardMapa(tk.Frame):
             bg=CORES["superficie"],
             highlightbackground=CORES["borda"],
             highlightthickness=1,
-            padx=24,
-            pady=22,
+            padx=12,
+            pady=10,
         )
         preview = tk.Canvas(
-            self, height=145, bg="#DCE9D6", highlightthickness=0
+            self, width=240, height=68, bg="#DCE9D6", highlightthickness=0
         )
-        preview.pack(fill="x", pady=(0, 18))
+        preview.pack(fill="x", pady=(0, 7))
         self._desenhar_preview(preview, mapa)
         tk.Label(
             self, text=mapa.nome, bg=CORES["superficie"], fg=CORES["texto"],
-            font=(FONTE, 15, "bold"), anchor="w",
+            font=(FONTE, 13, "bold"), anchor="w",
         ).pack(fill="x")
+        estrelas = "★" * mapa.dificuldade + "☆" * (6 - mapa.dificuldade)
+        tk.Label(
+            self, text=f"NÍVEL {mapa.dificuldade}  {estrelas}",
+            bg=CORES["superficie"], fg=CORES["caminho"],
+            font=(FONTE, 8, "bold"), anchor="w",
+        ).pack(fill="x", pady=(3, 0))
         tk.Label(
             self, text=mapa.descricao, bg=CORES["superficie"],
-            fg=CORES["texto_suave"], font=(FONTE, 10), anchor="nw",
-            justify="left", wraplength=245,
-        ).pack(fill="both", expand=True, pady=(12, 18))
+            fg=CORES["texto_suave"], font=(FONTE, 9), anchor="nw",
+            justify="left", wraplength=260,
+        ).pack(fill="both", expand=True, pady=(5, 7))
         botao = Botao(
             self,
             "Selecionar" if mapa.disponivel else "Em breve",
             comando,
             destaque=mapa.disponivel,
+            pady=7,
         )
         if not mapa.disponivel:
             botao.configure(state="disabled", cursor="arrow")
@@ -83,26 +90,27 @@ class CardMapa(tk.Frame):
 
     @staticmethod
     def _desenhar_preview(canvas: tk.Canvas, mapa: Mapa) -> None:
-        canvas.create_rectangle(10, 10, 245, 135, fill="#C8DDBF", outline="")
+        canvas.create_rectangle(6, 5, 234, 63, fill="#C8DDBF", outline="")
         if not mapa.disponivel:
             canvas.create_text(
-                127, 72, text="＋  NOVA CIDADE", fill="#62725E",
+                120, 34, text="＋  NOVA CIDADE", fill="#62725E",
                 font=(FONTE, 12, "bold"),
             )
             return
         caminhos = (
-            (25, 105, 78, 72), (78, 72, 130, 95),
-            (78, 72, 128, 35), (130, 95, 190, 72),
-            (128, 35, 220, 56), (190, 72, 220, 56),
+            (20, 52, 72, 35), (72, 35, 124, 48),
+            (72, 35, 122, 14), (124, 48, 182, 36),
+            (122, 14, 218, 26), (182, 36, 218, 26),
         )
         cores = ("#CBD5E1", "#71C98B", "#E8C36A", "#A56A4B")
         for indice, (x1, y1, x2, y2) in enumerate(caminhos):
             cor = "#CBD5E1" if not mapa.ponderado else cores[indice % len(cores)]
             canvas.create_line(x1, y1, x2, y2, fill="#718096", width=9)
             canvas.create_line(x1, y1, x2, y2, fill=cor, width=5)
-        for indice, (x, y) in enumerate(((25, 105), (78, 72), (130, 95), (128, 35), (190, 72), (220, 56))):
+        pontos = ((20, 52), (72, 35), (124, 48), (122, 14), (182, 36), (218, 26))
+        for indice, (x, y) in enumerate(pontos):
             cor = CORES["inicio"] if indice == 0 else CORES["destino"] if indice == 5 else "#FFFFFF"
-            canvas.create_oval(x - 8, y - 8, x + 8, y + 8, fill=cor, outline="#526174", width=2)
+            canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill=cor, outline="#526174", width=2)
 
 
 class GrafoCanvas(tk.Canvas):

@@ -62,6 +62,7 @@ python main.py
 
 Escolha um mapa e um algoritmo adversário. A corrida começa imediatamente:
 
+- avance por seis mapas com dificuldade, ramificações e bloqueios crescentes;
 - clique em um local vizinho para caminhar até ele;
 - cada terreno consome um tempo e custo diferentes;
 - é possível voltar por uma conexão válida, pagando novamente seu custo;

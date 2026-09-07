@@ -1,7 +1,7 @@
 import unittest
 
 from algoritmos import TipoEventoBusca, executar_bfs, executar_dijkstra
-from mapas import obter_mapa
+from mapas import MAPAS, obter_mapa
 
 
 class TestAlgoritmosDaPartida(unittest.TestCase):
@@ -28,6 +28,20 @@ class TestAlgoritmosDaPartida(unittest.TestCase):
             TipoEventoBusca.ATUALIZOU_CUSTO,
             {evento.tipo for evento in resultado.eventos},
         )
+
+    def test_dijkstra_nunca_supera_o_custo_do_bfs_nos_seis_mapas(self) -> None:
+        for mapa in MAPAS:
+            grafo = mapa.criar_grafo()
+            vertices = tuple(item.identificador for item in mapa.vertices)
+            bfs = executar_bfs(grafo, mapa.inicio, mapa.destino)
+            dijkstra = executar_dijkstra(
+                grafo, vertices, mapa.inicio, mapa.destino
+            )
+            self.assertLessEqual(
+                dijkstra.custo_total,
+                bfs.custo_total,
+                msg=f"Comparação inválida no mapa {mapa.identificador}",
+            )
 
 
 if __name__ == "__main__":

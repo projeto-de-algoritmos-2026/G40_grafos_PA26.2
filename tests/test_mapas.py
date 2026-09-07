@@ -30,6 +30,18 @@ class TestMapas(unittest.TestCase):
         self.assertEqual(hospital.nome, "Hospital Central")
         self.assertEqual(hospital.tipo, "hospital")
 
+    def test_mapas_formam_progressao_de_seis_niveis(self) -> None:
+        self.assertEqual([mapa.dificuldade for mapa in MAPAS], list(range(1, 7)))
+        self.assertEqual(len({mapa.identificador for mapa in MAPAS}), 6)
+
+    def test_todos_os_mapas_possuem_destino_alcancavel(self) -> None:
+        for mapa in MAPAS:
+            grafo = mapa.criar_grafo()
+            self.assertTrue(
+                grafo.busca_em_largura(mapa.inicio, mapa.destino),
+                msg=f"Destino inalcançável no mapa {mapa.identificador}",
+            )
+
     def test_identificador_inexistente_e_rejeitado(self) -> None:
         with self.assertRaises(ValueError):
             obter_mapa("inexistente")
