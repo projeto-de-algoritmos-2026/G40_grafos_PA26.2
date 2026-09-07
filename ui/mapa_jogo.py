@@ -5,6 +5,7 @@ from collections.abc import Callable
 
 from mapas import Mapa, TipoLocal
 from partida import Partida
+from simulacao import FaseRobo
 from ui.avatares import cor_avatar, desenhar_token
 from ui.tema import CORES, FONTE, FONTE_ICONE
 
@@ -81,7 +82,11 @@ class MapaJogo(tk.Canvas):
                 vertice,
                 *coordenadas[vertice.identificador],
                 disponivel=vertice.identificador in vizinhos,
-                explorado=vertice.identificador in explorados
+                explorado=vertice.identificador in explorados,
+                analisando=(
+                    self._partida is not None
+                    and vertice.identificador == self._partida.estado.no_em_analise
+                ),
             )
 
         if self._partida is not None:
@@ -129,7 +134,16 @@ class MapaJogo(tk.Canvas):
                     fill="#8F2634", width=3,
                 )
 
-    def _desenhar_local(self, vertice, x: float, y: float, *, disponivel: bool, explorado: bool) -> None:
+    def _desenhar_local(
+        self,
+        vertice,
+        x: float,
+        y: float,
+        *,
+        disponivel: bool,
+        explorado: bool,
+        analisando: bool,
+    ) -> None:
         tag = f"local-{vertice.identificador}"
         contorno = CORES["caminho"] if disponivel else "#7B8A9A"
         largura = 4 if disponivel else 2
@@ -137,6 +151,10 @@ class MapaJogo(tk.Canvas):
         if explorado and vertice.identificador not in (self.mapa.inicio, self.mapa.destino):
             contorno = (cor_avatar(self._partida.adversario) if self._partida else CORES["caminho"])
             largura = 4
+
+        if analisando:
+            contorno = cor_avatar(self._partida.adversario) if self._partida else CORES["caminho"]
+            largura = 6
 
         if vertice.identificador == self.mapa.inicio:
             contorno = CORES["inicio"]
@@ -165,6 +183,19 @@ class MapaJogo(tk.Canvas):
             x - 20, y + 9, anchor="w", text=f"Nó {vertice.identificador}",
             fill="#718096", font=(FONTE, 7), tags=(tag, "local"),
         )
+        if (
+            self._partida is not None
+            and vertice.identificador in self._partida.estado.custos_estimados
+        ):
+            custo = self._partida.estado.custos_estimados[vertice.identificador]
+            self.create_oval(
+                x + 42, y - 38, x + 68, y - 14,
+                fill=cor_avatar(self._partida.adversario), outline="#FFFFFF", width=2,
+            )
+            self.create_text(
+                x + 55, y - 26, text=str(custo), fill="#10192A",
+                font=(FONTE, 8, "bold"),
+            )
         if vertice.identificador in (self.mapa.inicio, self.mapa.destino):
             etiqueta = "ORIGEM" if vertice.identificador == self.mapa.inicio else "DESTINO"
             self.create_text(
@@ -190,19 +221,77 @@ class MapaJogo(tk.Canvas):
 
         trilha(self._partida.estado.jogador.caminho_percorrido, CORES["jogador"])
         rota_visivel = self._partida.estado.algoritmo.caminho_percorrido
-        if self._partida.estado.concluida:
+        if self._partida.estado.fase_robo != FaseRobo.ANALISANDO:
             rota_visivel = list(self._partida.estado.rota_algoritmo)
         trilha(rota_visivel, cor_avatar(self._partida.adversario), (8, 4))
+
+        for competidor, cor in (
+            (self._partida.estado.jogador, CORES["jogador"]),
+            (self._partida.estado.algoritmo, cor_avatar(self._partida.adversario)),
+        ):
+            if competidor.movimento is None:
+                continue
+            inicio = coordenadas[competidor.movimento.origem]
+            atual = self._posicao_competidor(competidor, coordenadas)
+            self.create_line(
+                *inicio, *atual, fill=cor, width=4, capstyle="round"
+            )
 
     def _desenhar_competidores(self, coordenadas: dict[int, tuple[float, float]]) -> None:
         assert self._partida is not None
         jogador = self._partida.estado.jogador
         algoritmo = self._partida.estado.algoritmo
-        jx, jy = coordenadas[jogador.local_atual]
-        ax, ay = coordenadas[algoritmo.local_atual]
-        mesmo_local = jogador.local_atual == algoritmo.local_atual
+        jx, jy = self._posicao_competidor(jogador, coordenadas)
+        ax, ay = self._posicao_competidor(algoritmo, coordenadas)
+        mesmo_local = (
+            jogador.local_atual == algoritmo.local_atual
+            and jogador.movimento is None
+            and algoritmo.movimento is None
+        )
         desenhar_token(self, jx - (19 if mesmo_local else 0), jy - 45, "Jogador", "VOCÊ")
         desenhar_token(
             self, ax + (19 if mesmo_local else 0), ay - 45,
             self._partida.adversario, self._partida.adversario.value.upper(),
+        )
+        self._desenhar_pensamento(ax + (19 if mesmo_local else 0), ay - 45, coordenadas)
+
+    def _posicao_competidor(self, competidor, coordenadas) -> tuple[float, float]:
+        movimento = competidor.movimento
+        if movimento is None:
+            return coordenadas[competidor.local_atual]
+        x1, y1 = coordenadas[movimento.origem]
+        x2, y2 = coordenadas[movimento.destino]
+        progresso = movimento.progresso
+        return x1 + (x2 - x1) * progresso, y1 + (y2 - y1) * progresso
+
+    def _desenhar_pensamento(
+        self,
+        robo_x: float,
+        robo_y: float,
+        coordenadas: dict[int, tuple[float, float]],
+    ) -> None:
+        assert self._partida is not None
+        estado = self._partida.estado
+        cor = cor_avatar(self._partida.adversario)
+        largura_balao = 224
+        x = min(max(robo_x, largura_balao / 2 + 8), self.winfo_width() - largura_balao / 2 - 8)
+        y = max(robo_y - 72, 48)
+
+        if estado.no_em_analise in coordenadas:
+            alvo_x, alvo_y = coordenadas[estado.no_em_analise]
+            self.create_line(
+                robo_x, robo_y, alvo_x, alvo_y,
+                fill=cor, width=2, dash=(4, 5), arrow="last",
+            )
+
+        self.create_oval(robo_x - 8, robo_y - 30, robo_x, robo_y - 22, fill="#FFFFFF", outline=cor)
+        self.create_oval(robo_x - 16, robo_y - 43, robo_x - 5, robo_y - 32, fill="#FFFFFF", outline=cor)
+        self.create_rectangle(
+            x - largura_balao / 2, y - 28,
+            x + largura_balao / 2, y + 28,
+            fill="#FFFFFF", outline=cor, width=2,
+        )
+        self.create_text(
+            x, y, text=estado.mensagem_robo, fill="#243447",
+            font=(FONTE, 8, "bold"), width=largura_balao - 16, justify="center",
         )

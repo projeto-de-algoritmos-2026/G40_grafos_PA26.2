@@ -146,7 +146,13 @@ class GrafoPonderado:
         return [] # e fim
 
 
-    def dijkstra(self, origem, destino):
+    def dijkstra(
+        self,
+        origem: int,
+        destino: int,
+        ao_processar: Callable[[int, int], None] | None = None,
+        ao_atualizar: Callable[[int, int, int], None] | None = None,
+    ) -> tuple[list[int], int | float]:
 
             self._validar_vertice(origem)
             self._validar_vertice(destino)
@@ -168,6 +174,9 @@ class GrafoPonderado:
                 if distancia_atual > distancias.get(vertice_atual, math.inf):
                     continue
 
+                if ao_processar is not None:
+                    ao_processar(vertice_atual, distancia_atual)
+
                 if vertice_atual == destino: 
                     break
 
@@ -179,6 +188,8 @@ class GrafoPonderado:
                     if nova_distancia < distancias.get(vizinho, math.inf):
                         distancias[vizinho] = nova_distancia
                         antecessores[vizinho] = vertice_atual
+                        if ao_atualizar is not None:
+                            ao_atualizar(vertice_atual, vizinho, nova_distancia)
                         heap_inserir(heap, (nova_distancia, vizinho))
 
 

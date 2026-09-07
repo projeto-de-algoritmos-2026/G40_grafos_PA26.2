@@ -1,6 +1,7 @@
 """Telas do fluxo do jogo educacional."""
 
 import tkinter as tk
+import time
 from collections.abc import Callable
 
 from mapas import MAPAS, Mapa
@@ -8,14 +9,8 @@ from partida import Partida
 from simulacao import TipoAdversario
 from ui.avatares import Avatar, cor_avatar
 from ui.componentes import Botao, CardMapa
-from ui.componentes_jogo import (
-    CardAdversario,
-    GameHUD,
-    IndicadorDestino,
-    LegendaTerrenos,
-    PainelMovimento,
-    ResultadoJogo,
-)
+from ui.componentes_jogo import CardAdversario
+from ui.hud_jogo import ControlesMovimento, HUDCompacto, ResultadoTempo
 from ui.mapa_jogo import MapaJogo
 from ui.tema import CORES, FONTE
 
@@ -163,34 +158,30 @@ class TelaCorrida(TelaBase):
         super().__init__(parent)
         self.partida = Partida(mapa, adversario)
         self._voltar = voltar
+        self._tick_id: str | None = None
+        self._ultimo_tick = time.perf_counter()
+        self._resultado_mostrado = False
         self._montar_cabecalho()
 
-        corpo = tk.Frame(self, bg=CORES["fundo"], padx=18)
-        corpo.pack(fill="both", expand=True, pady=(0, 16))
-        corpo.columnconfigure(0, weight=1)
-        corpo.columnconfigure(1, minsize=305)
-        corpo.rowconfigure(0, weight=1)
+        self.hud = HUDCompacto(self, self.partida)
+        self.hud.pack(fill="x", padx=18, pady=(0, 10))
 
         moldura_mapa = tk.Frame(
-            corpo, bg="#F4F8F1", padx=5, pady=5,
+            self, bg="#F4F8F1", padx=5, pady=5,
             highlightbackground="#5D7257", highlightthickness=2,
         )
-        moldura_mapa.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        moldura_mapa.pack(fill="both", expand=True, padx=18)
         self.mapa_jogo = MapaJogo(moldura_mapa, mapa, self._mover_jogador)
         self.mapa_jogo.pack(fill="both", expand=True)
 
-        lateral = tk.Frame(corpo, bg=CORES["fundo"])
-        lateral.grid(row=0, column=1, sticky="nsew")
-        IndicadorDestino(lateral, mapa).pack(fill="x", pady=(0, 8))
-        self.hud = GameHUD(lateral, self.partida)
-        self.hud.pack(fill="x", pady=(0, 8))
-        self.movimentos = PainelMovimento(lateral, self.partida, self._mover_jogador)
-        self.movimentos.pack(fill="x", pady=(0, 8))
-        LegendaTerrenos(lateral).pack(fill="x", pady=(0, 8))
-        Botao(lateral, "Reiniciar partida", self._reiniciar).pack(fill="x")
+        self.movimentos = ControlesMovimento(
+            self, self.partida, self._mover_jogador
+        )
+        self.movimentos.pack(fill="x", padx=18, pady=10)
 
-        self.resultado = ResultadoJogo(self, self._reiniciar, self._voltar)
+        self.resultado = ResultadoTempo(self, self._reiniciar, self._voltar)
         self._atualizar_interface()
+        self._agendar_tick()
 
     def _montar_cabecalho(self) -> None:
         cabecalho = tk.Frame(self, bg=CORES["fundo"], padx=18, pady=13)
@@ -212,18 +203,33 @@ class TelaCorrida(TelaBase):
             font=(FONTE, 9, "bold"), padx=13, pady=7,
         )
         badge.pack(side="right")
+        Botao(
+            cabecalho, "Reiniciar", self._reiniciar, padx=12, pady=7
+        ).pack(side="right", padx=(0, 9))
 
     def _mover_jogador(self, destino: int) -> None:
         if self.partida.estado.concluida:
             return
         self.partida.mover_jogador(destino)
         self._atualizar_interface()
-        if self.partida.estado.concluida:
-            self.after(180, self._mostrar_resultado_se_concluida)
 
-    def _mostrar_resultado_se_concluida(self) -> None:
+    def _agendar_tick(self) -> None:
+        if self._tick_id is None and not self.partida.estado.concluida:
+            self._tick_id = self.after(33, self._tick)
+
+    def _tick(self) -> None:
+        self._tick_id = None
+        agora = time.perf_counter()
+        delta_ms = (agora - self._ultimo_tick) * 1000
+        self._ultimo_tick = agora
+        self.partida.atualizar(delta_ms)
+        self._atualizar_interface()
         if self.partida.estado.concluida:
-            self.resultado.mostrar(self.partida)
+            if not self._resultado_mostrado:
+                self._resultado_mostrado = True
+                self.resultado.mostrar(self.partida)
+            return
+        self._agendar_tick()
 
     def _atualizar_interface(self) -> None:
         self.mapa_jogo.atualizar(self.partida)
@@ -233,4 +239,16 @@ class TelaCorrida(TelaBase):
     def _reiniciar(self) -> None:
         self.partida.reiniciar()
         self.resultado.ocultar()
+        self._resultado_mostrado = False
+        self._ultimo_tick = time.perf_counter()
         self._atualizar_interface()
+        self._agendar_tick()
+
+    def destroy(self) -> None:
+        if self._tick_id is not None:
+            try:
+                self.after_cancel(self._tick_id)
+            except tk.TclError:
+                pass
+            self._tick_id = None
+        super().destroy()

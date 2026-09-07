@@ -28,6 +28,19 @@ class TestBuscaEmLarguraExistente(unittest.TestCase):
         self.assertEqual(caminho, [0, 1, 3])
         self.assertEqual(descobertos, [0, 1, 2, 3])
 
+    def test_dijkstra_existente_retorna_caminho_de_menor_custo(self) -> None:
+        grafo = GrafoPonderado()
+        grafo.adicionar_n_vertices(4)
+        grafo.adicionar_aresta(0, 1, 10)
+        grafo.adicionar_aresta(0, 2, 1)
+        grafo.adicionar_aresta(2, 3, 1)
+        grafo.adicionar_aresta(3, 1, 1)
+
+        caminho, custo = grafo.dijkstra(0, 1)
+
+        self.assertEqual(caminho, [0, 2, 3, 1])
+        self.assertEqual(custo, 3)
+
 
 if __name__ == "__main__":
     unittest.main()

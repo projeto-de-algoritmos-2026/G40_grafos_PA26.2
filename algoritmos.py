@@ -1,15 +1,24 @@
-"""Adaptadores dos algoritmos para o estado de uma partida.
+"""Adapta os algoritmos do grafo para eventos visuais do jogo."""
 
-O BFS continua sendo executado por ``GrafoPonderado.busca_em_largura``. Este
-módulo apenas coleta seus detalhes. Dijkstra é implementado aqui porque ainda
-não existia no projeto.
-"""
-
-import heapq
-import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from grafo import GrafoPonderado
+
+
+class TipoEventoBusca(StrEnum):
+    DESCOBRIU = "descobriu"
+    PROCESSOU = "processou"
+    ATUALIZOU_CUSTO = "atualizou-custo"
+    CONCLUIU = "concluiu"
+
+
+@dataclass(frozen=True)
+class EventoBusca:
+    tipo: TipoEventoBusca
+    vertice: int
+    origem: int | None = None
+    custo: int | None = None
 
 
 @dataclass(frozen=True)
@@ -17,6 +26,7 @@ class ResultadoBusca:
     caminho: tuple[int, ...]
     ordem_exploracao: tuple[int, ...]
     custo_total: int
+    eventos: tuple[EventoBusca, ...] = ()
 
     @property
     def distancia(self) -> int:
@@ -27,11 +37,22 @@ def executar_bfs(
     grafo: GrafoPonderado, origem: int, destino: int
 ) -> ResultadoBusca:
     ordem: list[int] = []
-    caminho = grafo.busca_em_largura(origem, destino, ao_descobrir=ordem.append)
+    eventos: list[EventoBusca] = []
+
+    def registrar_descoberta(vertice: int) -> None:
+        ordem.append(vertice)
+        eventos.append(EventoBusca(TipoEventoBusca.DESCOBRIU, vertice))
+
+    caminho = grafo.busca_em_largura(
+        origem, destino, ao_descobrir=registrar_descoberta
+    )
+    if caminho:
+        eventos.append(EventoBusca(TipoEventoBusca.CONCLUIU, destino))
     return ResultadoBusca(
         caminho=tuple(caminho),
         ordem_exploracao=tuple(ordem),
         custo_total=_calcular_custo(grafo, caminho),
+        eventos=tuple(eventos),
     )
 
 
@@ -41,40 +62,43 @@ def executar_dijkstra(
     origem: int,
     destino: int,
 ) -> ResultadoBusca:
-    """Encontra o caminho de menor custo usando somente a API pública do grafo."""
-    distancias = {vertice: math.inf for vertice in vertices}
-    distancias[origem] = 0
-    antecessores: dict[int, int] = {}
-    fila: list[tuple[int, int]] = [(0, origem)]
+    """Usa o Dijkstra e a heap do grafo, coletando decisões para a animação."""
+    del vertices  # Mantido no contrato para compatibilidade com os chamadores.
     ordem: list[int] = []
-    finalizados: set[int] = set()
+    eventos: list[EventoBusca] = []
 
-    while fila:
-        distancia_atual, atual = heapq.heappop(fila)
-        if atual in finalizados:
-            continue
-        finalizados.add(atual)
-        ordem.append(atual)
-        if atual == destino:
-            break
+    def registrar_processamento(vertice: int, custo: int) -> None:
+        ordem.append(vertice)
+        eventos.append(
+            EventoBusca(TipoEventoBusca.PROCESSOU, vertice, custo=custo)
+        )
 
-        for vizinho, peso in grafo.obter_vizinhos(atual).items():
-            if peso == 0:
-                continue
-            nova_distancia = distancia_atual + peso
-            if nova_distancia < distancias[vizinho]:
-                distancias[vizinho] = nova_distancia
-                antecessores[vizinho] = atual
-                heapq.heappush(fila, (nova_distancia, vizinho))
+    def registrar_atualizacao(origem_evento: int, vertice: int, custo: int) -> None:
+        eventos.append(
+            EventoBusca(
+                TipoEventoBusca.ATUALIZOU_CUSTO,
+                vertice,
+                origem=origem_evento,
+                custo=custo,
+            )
+        )
 
-    if math.isinf(distancias[destino]):
-        return ResultadoBusca((), tuple(ordem), 0)
-
-    caminho = [destino]
-    while caminho[-1] != origem:
-        caminho.append(antecessores[caminho[-1]])
-    caminho.reverse()
-    return ResultadoBusca(tuple(caminho), tuple(ordem), int(distancias[destino]))
+    caminho, custo = grafo.dijkstra(
+        origem,
+        destino,
+        ao_processar=registrar_processamento,
+        ao_atualizar=registrar_atualizacao,
+    )
+    if caminho:
+        eventos.append(
+            EventoBusca(TipoEventoBusca.CONCLUIU, destino, custo=int(custo))
+        )
+    return ResultadoBusca(
+        caminho=tuple(caminho),
+        ordem_exploracao=tuple(ordem),
+        custo_total=0 if not caminho else int(custo),
+        eventos=tuple(eventos),
+    )
 
 
 def _calcular_custo(grafo: GrafoPonderado, caminho: list[int]) -> int:

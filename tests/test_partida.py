@@ -2,7 +2,17 @@ import unittest
 
 from mapas import obter_mapa
 from partida import Partida
-from simulacao import TipoAdversario
+from simulacao import FaseRobo, TipoAdversario
+
+
+def avancar(partida: Partida, duracao_ms: int, passo_ms: int = 50) -> None:
+    for _ in range(duracao_ms // passo_ms):
+        partida.atualizar(passo_ms)
+
+
+def aguardar_jogador(partida: Partida) -> None:
+    while partida.estado.jogador.movimento is not None:
+        partida.atualizar(50)
 
 
 class TestPartida(unittest.TestCase):
@@ -16,41 +26,65 @@ class TestPartida(unittest.TestCase):
         with self.assertRaises(ValueError):
             partida.mover_jogador(5)  # conexão visualmente bloqueada
 
-    def test_adversario_avanca_na_rota_do_algoritmo_a_cada_turno(self) -> None:
+    def test_movimento_leva_tempo_e_bloqueia_nova_escolha(self) -> None:
         partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
         partida.mover_jogador(4)
-        self.assertEqual(partida.estado.algoritmo.local_atual, 2)
-        self.assertEqual(partida.estado.algoritmo.custo, 1)
+        partida.atualizar(300)
+        self.assertEqual(partida.estado.jogador.local_atual, 1)
+        self.assertIsNotNone(partida.estado.jogador.movimento)
+        with self.assertRaises(RuntimeError):
+            partida.mover_jogador(2)
 
-    def test_bfs_chega_em_dois_turnos_pela_rota_de_menos_arestas(self) -> None:
-        partida = Partida(self.mapa, TipoAdversario.BFS)
+    def test_jogador_pode_voltar_e_paga_novamente_o_caminho(self) -> None:
+        partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
         partida.mover_jogador(2)
-        partida.mover_jogador(3)
+        aguardar_jogador(partida)
+        partida.mover_jogador(1)
+        aguardar_jogador(partida)
+        self.assertEqual(partida.estado.jogador.local_atual, 1)
+        self.assertEqual(partida.estado.jogador.movimentos, 2)
+        self.assertEqual(partida.estado.jogador.custo, 2)
+
+    def test_robo_analisa_e_avanca_sem_clique_do_jogador(self) -> None:
+        partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
+        avancar(partida, 5000)
+        self.assertEqual(partida.estado.jogador.local_atual, 1)
+        self.assertGreater(partida.estado.algoritmo.nos_analisados, 0)
+        self.assertIn(
+            partida.estado.fase_robo,
+            {FaseRobo.PREPARANDO, FaseRobo.MOVENDO, FaseRobo.CHEGOU},
+        )
+
+    def test_dijkstra_exibe_atualizacoes_de_menor_custo(self) -> None:
+        partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
+        avancar(partida, 1200)
+        self.assertTrue(partida.estado.custos_estimados)
+        self.assertIn("custo", partida.estado.mensagem_robo.lower())
+
+    def test_bfs_pode_chegar_sem_acao_do_jogador(self) -> None:
+        partida = Partida(self.mapa, TipoAdversario.BFS)
+        avancar(partida, 9000)
         self.assertEqual(partida.estado.vencedor, "algoritmo")
         self.assertEqual(partida.estado.algoritmo.caminho_percorrido, [1, 4, 8])
 
     def test_jogador_pode_vencer_dijkstra_pela_rota_curta(self) -> None:
         partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
         partida.mover_jogador(4)
+        aguardar_jogador(partida)
         partida.mover_jogador(8)
+        aguardar_jogador(partida)
         self.assertEqual(partida.estado.vencedor, "jogador")
         self.assertEqual(partida.estado.jogador.custo, 20)
-        self.assertEqual(partida.resultado_algoritmo.custo_total, 6)
 
-    def test_jogador_pode_empatar_se_seguir_a_rota_de_dijkstra(self) -> None:
-        partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
-        for destino in (2, 3, 6, 8):
-            partida.mover_jogador(destino)
-        self.assertEqual(partida.estado.vencedor, "empate")
-        self.assertEqual(partida.estado.jogador.custo, 6)
-
-    def test_reiniciar_restaura_os_dois_competidores(self) -> None:
+    def test_reiniciar_restaura_relogio_e_competidores(self) -> None:
         partida = Partida(self.mapa, TipoAdversario.DIJKSTRA)
         partida.mover_jogador(4)
+        avancar(partida, 500)
         partida.reiniciar()
         self.assertEqual(partida.estado.jogador.local_atual, self.mapa.inicio)
         self.assertEqual(partida.estado.algoritmo.local_atual, self.mapa.inicio)
-        self.assertEqual(partida.estado.turno, 0)
+        self.assertEqual(partida.estado.tempo_decorrido_ms, 0)
+        self.assertEqual(partida.estado.fase_robo, FaseRobo.ANALISANDO)
 
 
 if __name__ == "__main__":

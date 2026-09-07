@@ -20,6 +20,27 @@ class TipoAdversario(StrEnum):
     DIJKSTRA = "Dijkstra"
 
 
+class FaseRobo(StrEnum):
+    ANALISANDO = "Analisando o mapa"
+    PREPARANDO = "Rota encontrada"
+    MOVENDO = "A caminho"
+    CHEGOU = "Chegou ao destino"
+
+
+@dataclass
+class MovimentoEmCurso:
+    origem: int
+    destino: int
+    duracao_ms: float
+    decorrido_ms: float = 0
+
+    @property
+    def progresso(self) -> float:
+        if self.duracao_ms <= 0:
+            return 1.0
+        return min(self.decorrido_ms / self.duracao_ms, 1.0)
+
+
 @dataclass
 class EstadoCompetidor:
     nome: str
@@ -28,6 +49,8 @@ class EstadoCompetidor:
     custo: int = 0
     caminho_percorrido: list[int] = field(default_factory=list)
     nos_analisados: int = 0
+    movimento: MovimentoEmCurso | None = None
+    tempo_chegada_ms: float | None = None
 
     def __post_init__(self) -> None:
         if not self.caminho_percorrido:
@@ -43,7 +66,14 @@ class EstadoPartida:
     ordem_exploracao: tuple[int, ...]
     turno: int = 0
     vencedor: str | None = None
-    exploracao_revelada: int = 1
+    exploracao_revelada: int = 0
+    tempo_decorrido_ms: float = 0
+    fase_robo: FaseRobo = FaseRobo.ANALISANDO
+    indice_evento: int = 0
+    tempo_ate_evento_ms: float = 350
+    no_em_analise: int | None = None
+    mensagem_robo: str = "Preparando a busca..."
+    custos_estimados: dict[int, int] = field(default_factory=dict)
 
     @property
     def concluida(self) -> bool:

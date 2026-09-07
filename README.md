@@ -50,12 +50,23 @@ Adicione 3 ou mais screenshots do projeto em funcionamento.
 ## Instalação
 
 Linguagem: Python 3.12.3<br>
-Framework: (caso exista)<br>
-Descreva os pré-requisitos para rodar o seu projeto e os comandos necessários.
+Interface: Tkinter 8.6, incluído na instalação padrão do Python.<br>
+
+Não há dependências externas. Execute na raiz do projeto:
+
+```bash
+python main.py
+```
 
 ## Uso
 
-Explique como usar seu projeto caso haja algum passo a passo após o comando de execução.
+Escolha um mapa e um algoritmo adversário. A corrida começa imediatamente:
+
+- clique em um local vizinho para caminhar até ele;
+- cada terreno consome um tempo e custo diferentes;
+- é possível voltar por uma conexão válida, pagando novamente seu custo;
+- o balão do robô mostra a fila do BFS ou os custos calculados por Dijkstra;
+- o cronômetro continua enquanto jogador e robô analisam ou se movimentam.
 
 ## Outros
 
