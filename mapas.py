@@ -178,17 +178,6 @@ MAPAS: tuple[Mapa, ...] = (
         destino=8,
         ponderado=True,
     ),
-    Mapa(
-        identificador="personalizado",
-        nome="Sua própria cidade",
-        descricao="Crie e configure os locais e terrenos do seu mapa.",
-        vertices=(),
-        arestas=(),
-        inicio=0,
-        destino=0,
-        ponderado=True,
-        disponivel=False,
-    ),
 )
 
 

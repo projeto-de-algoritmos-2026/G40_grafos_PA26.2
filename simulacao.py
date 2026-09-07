@@ -43,6 +43,7 @@ class EstadoPartida:
     ordem_exploracao: tuple[int, ...]
     turno: int = 0
     vencedor: str | None = None
+    exploracao_revelada: int = 1
 
     @property
     def concluida(self) -> bool:

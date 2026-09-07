@@ -70,12 +70,20 @@ class MapaJogo(tk.Canvas):
                 vertice.identificador
                 for vertice in self._partida.destinos_disponiveis()
             }
+
+        explorados = set()
+        if self._partida is not None: 
+            explorados = set(self._partida.nos_explorados_visiveis())
+
+        
         for vertice in self.mapa.vertices:
             self._desenhar_local(
                 vertice,
                 *coordenadas[vertice.identificador],
                 disponivel=vertice.identificador in vizinhos,
+                explorado=vertice.identificador in explorados
             )
+
         if self._partida is not None:
             self._desenhar_competidores(coordenadas)
 
@@ -121,10 +129,15 @@ class MapaJogo(tk.Canvas):
                     fill="#8F2634", width=3,
                 )
 
-    def _desenhar_local(self, vertice, x: float, y: float, *, disponivel: bool) -> None:
+    def _desenhar_local(self, vertice, x: float, y: float, *, disponivel: bool, explorado: bool) -> None:
         tag = f"local-{vertice.identificador}"
         contorno = CORES["caminho"] if disponivel else "#7B8A9A"
         largura = 4 if disponivel else 2
+
+        if explorado and vertice.identificador not in (self.mapa.inicio, self.mapa.destino):
+            contorno = (cor_avatar(self._partida.adversario) if self._partida else CORES["caminho"])
+            largura = 4
+
         if vertice.identificador == self.mapa.inicio:
             contorno = CORES["inicio"]
         elif vertice.identificador == self.mapa.destino:

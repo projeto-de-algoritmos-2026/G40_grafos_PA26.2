@@ -144,7 +144,8 @@ class GameHUD(tk.Frame):
         self._algoritmo["numeros"].configure(
             text=(
                 f"Movimentos: {estado.algoritmo.movimentos}\n"
-                f"Nós analisados: {estado.algoritmo.nos_analisados}\n"
+                f"Nós analisados: {partida.estado.exploracao_revelada}/"
+                f"{estado.algoritmo.nos_analisados}\n"  
                 f"Custo atual: {estado.algoritmo.custo}"
             )
         )
@@ -281,12 +282,16 @@ class ResultadoJogo(tk.Frame):
 
     def mostrar(self, partida: Partida) -> None:
         estado = partida.estado
+        
         if estado.vencedor == "jogador":
-            titulo = "Você chegou ao destino!"
+            titulo = "Você venceu!"
+        elif estado.vencedor == "algoritmo":
+            titulo = f"{partida.adversario.value} venceu!"
         elif estado.vencedor == "empate":
-            titulo = "Empate na chegada!"
+            titulo = "Empate!"
         else:
-            titulo = f"{partida.adversario.value} chegou primeiro!"
+            titulo = "Partida encerrada."
+
         rota = partida.resultado_algoritmo
         self._titulo.configure(text=titulo)
         self._placar.configure(

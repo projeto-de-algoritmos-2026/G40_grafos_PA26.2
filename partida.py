@@ -57,6 +57,11 @@ class Partida:
         self._mover_competidor(self.estado.jogador, destino)
         self._mover_adversario()
         self.estado.turno += 1
+
+        self.estado.exploracao_revelada = min(
+            self.estado.exploracao_revelada + 1, len(self.estado.ordem_exploracao)
+        )
+
         self._verificar_resultado()
 
     def _mover_adversario(self) -> None:
@@ -76,34 +81,51 @@ class Partida:
         competidor.caminho_percorrido.append(destino)
 
     def _verificar_resultado(self) -> None:
-        jogador_chegou = self.estado.jogador.local_atual == self.mapa.destino
-        algoritmo_chegou = self.estado.algoritmo.local_atual == self.mapa.destino
-        if jogador_chegou and algoritmo_chegou:
-            self.estado.vencedor = "empate"
-        elif jogador_chegou:
-            self.estado.vencedor = "jogador"
-        elif algoritmo_chegou:
-            self.estado.vencedor = "algoritmo"
+        jogador_chegou = (self.estado.jogador.local_atual == self.mapa.destino)
+        algoritmo_chegou = (self.estado.algoritmo.local_atual == self.mapa.destino)
+
+        if algoritmo_chegou and not jogador_chegou:
+            return
+
+        if jogador_chegou:
+            custo_jogador = self.estado.jogador.custo
+            custo_algoritmo = self.resultado_algoritmo.custo_total
+
+            if custo_jogador < custo_algoritmo:
+                self.estado.vencedor = "jogador"
+
+            elif custo_jogador > custo_algoritmo:
+                self.estado.vencedor = "algoritmo"
+
+            else:
+                self.estado.vencedor = "empate"
 
     def reiniciar(self) -> None:
         self.estado = self._estado_inicial()
 
     def conclusao_tecnica(self) -> str:
         jogador = self.estado.jogador
-        algoritmo = self.estado.algoritmo
+        custo_algoritmo = self.resultado_algoritmo.custo_total
+
         if self.estado.vencedor == "jogador":
-            return "Você conseguiu chegar ao destino antes do algoritmo."
-        if self.estado.vencedor == "empate":
-            if jogador.custo == algoritmo.custo:
-                return "Vocês chegaram juntos e percorreram rotas de custo equivalente."
-            menor = "Você" if jogador.custo < algoritmo.custo else self.adversario.value
-            return f"Vocês chegaram juntos, mas {menor} percorreu a rota de menor custo."
-        if algoritmo.movimentos > jogador.movimentos and algoritmo.custo < jogador.custo:
             return (
-                f"{self.adversario.value} percorreu mais movimentos, mas encontrou "
-                "uma rota de menor custo."
+                f"Você venceu pelo menor custo: "
+                f"{jogador.custo} contra {custo_algoritmo}."
             )
-        return f"{self.adversario.value} chegou primeiro seguindo sua estratégia de busca."
+
+        if self.estado.vencedor == "algoritmo":
+            return (
+                f"{self.adversario.value} venceu pelo menor custo: "
+                f"{custo_algoritmo} contra {jogador.custo}."
+            )
+
+        if self.estado.vencedor == "empate":
+            return (
+                f"Empate: ambos possuem uma rota com custo total "
+                f"de {jogador.custo}."
+            )
+
+        return "A partida ainda não foi concluída."
 
     def explicacao_educacional(self) -> str:
         if self.adversario == TipoAdversario.BFS:
@@ -115,3 +137,7 @@ class Partida:
             "Dijkstra considera o custo acumulado. Por isso, pode preferir uma rota "
             "mais longa em movimentos quando ela possui menor custo total."
         )
+
+    def nos_explorados_visiveis(self):
+        limite = self.estado.exploracao_revelada
+        return self.estado.ordem_exploracao[:limite]
