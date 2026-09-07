@@ -10,7 +10,6 @@ Conteúdo da Disciplina: Grafos<br>
 | 231011515 | Isaque Camargos Nascimento   |
 | 231011088 | ANA LUIZA SOARES DE CARVALHO |
 
-<center>
 <table>
   <tr>
     <td align="center">
@@ -37,7 +36,6 @@ Conteúdo da Disciplina: Grafos<br>
     </td>
   </tr>
 </table>
-</center>
 
 ## Sobre
 
@@ -45,7 +43,12 @@ Este repositório apresenta a implementação de um jogo visual desenvolvido par
 
 ## Screenshots
 
-Adicione 3 ou mais screenshots do projeto em funcionamento.
+
+![falhou](fotos/tela_escolha_mapas.png)
+
+![falhou](fotos/tela_trajetp.png)
+
+![falhou](fotos/tela_vitoria.png)
 
 ## Instalação
 
