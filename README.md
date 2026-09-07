@@ -72,6 +72,6 @@ Escolha um mapa e um algoritmo adversário. A corrida começa imediatamente:
 - o balão do robô mostra a fila do BFS ou os custos calculados por Dijkstra;
 - o cronômetro continua enquanto jogador e robô analisam ou se movimentam.
 
-## Outros
+## Vídeo
 
-Quaisquer outras informações sobre seu projeto podem ser descritas abaixo.
+[Clique aqui para assistir ao vídeo.](https://youtu.be/oOOmh5YtV6Y?si=gFeinFqQnSo_nQRJ)
